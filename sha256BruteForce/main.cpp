@@ -6,13 +6,14 @@
 //  Copyright © 2017 Thomas Fouan. All rights reserved.
 //
 
-#include <iostream>
 #include <iomanip>
 #include <sstream>
 #include <queue>
 #include <openssl/sha.h>
-#include "combinations.hpp"
 #include <thread>
+
+#include "combinations.hpp"
+#include "sha256.hpp"
 
 using namespace std;
 
@@ -23,6 +24,8 @@ const string NUMBERS = "0123456789";
 string passwordHash;
 
 bool sha256_test_function(string str);
+
+bool mock_test_function(string str);
 
 // Le nombre de chaines de caractères de taille N possibles pour un ensemble C de caractères (minuscules, majuscules, chiffres, etc) est égal à C^N.
 //
@@ -58,6 +61,26 @@ string sha256(const string str) {
 	}
 	
 	return ss.str();
+}
+
+string sha256_optim(const string str) {
+	const unsigned char *text = (const unsigned char *) str.c_str();
+	unsigned char hash[SHA256_DIGEST_LENGTH];
+	
+	sha256(text, (unsigned int) str.length(), hash);
+	
+	stringstream ss;
+	
+	//#pragma clang loop vectorize(enable)
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+		ss << hex << setw(2) << setfill('0') << (int) hash[i];
+	}
+	
+	return ss.str();
+}
+
+bool mock_test_function(string str) {
+	return false;
 }
 
 /*
@@ -124,7 +147,7 @@ void compute_average_time_sha256() {
 	
 	for(string str : test) {
 		start = chrono::system_clock::now();
-		sha256(str);
+		sha256_optim(str);
 		end = chrono::system_clock::now();
 		chrono::duration<double> elapsed_seconds = end - start;
 		average += elapsed_seconds.count();
@@ -146,11 +169,18 @@ int main(int argc, const char * argv[]) {
 	
 //	thread thread1 = thread(&cout, 1);
 	
-	//compute_average_time_sha256();
+	compute_average_time_sha256();
 	
 //	Calcul le temps que prend la fonction de hash
 	start = chrono::system_clock::now();
 	passwordHash = sha256("test");
+	end = chrono::system_clock::now();
+	
+	cout << "Hash : " << passwordHash << endl;
+	print_stats(start, end);
+	
+	start = chrono::system_clock::now();
+	passwordHash = sha256_optim("testEE");
 	end = chrono::system_clock::now();
 	
 	cout << "Hash : " << passwordHash << endl;
