@@ -104,28 +104,29 @@ void compute_average_time_sha256() {
 #include <string.h>
 int main(int argc, const char * argv[])
 {
-	std::string strMessage = "azert1234567890AZERTYUIOPMLKJHGFDSQWXCVBN1234567890 awxA";
-	uint32_t length = (uint32_t) strMessage.length();
-	
-	std::cout << "0x80 : '" << (char) 0x80 << "'" << std::endl;
-	std::cout << "0x00 : '" << (char) 0x00 << "'" << std::endl;
-	
-	uint8_t message[length];
-	for (uint32_t i = 0; i < length; i++) {
-		message[i] = strMessage[i];
-		cout << message[i];
-	}
-	cout << endl;
+//	std::string strMessage = "azert1234567890AZERTYUIOPMLKJHGFDSQWXCVBN1234567890 awxA7890123LMKKKK";
+//	uint32_t length = (uint32_t) strMessage.length();
+//	uint32_t lengthMsg = 64 * (length/64) + ((length%64 == 0) ? 0 : 64);
+//
+//	std::cout << "taille lengthMsg : " << lengthMsg << std::endl;
+//
+//	uint8_t message[lengthMsg];
+//	memset(message, 0x00, sizeof(message));
+//
+//	for (uint32_t i = 0; i < length; i++) {
+//		message[i] = (unsigned int) strMessage[i];
+//	}
 	
 	/* empty message with padding */
-//	uint8_t message[64];
-//	memset(message, 0x00, sizeof(message));
-//	message[0] = 0x80;
+	uint8_t message[64];
+	memset(message, 0x00, sizeof(message));
+	message[0] = 0x80;
+//	std::cout << "taille message[] : " << (uint32_t) sizeof(message) << std::endl;
 
 	/* intial state */
 	uint32_t state[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
 
-	sha256_process_x86(state, message, (uint32_t) sizeof(message));
+	sha256_process_x86(state, message, sizeof(message));
 
 	/* E3B0C44298FC1C14... */
 	printf("SHA256 hash of empty message: ");
@@ -139,14 +140,27 @@ int main(int argc, const char * argv[])
 		   (state[6] >> 24) & 0xFF, (state[6] >> 16) & 0xFF, (state[6] >> 8) & 0xFF, (state[6] >> 0) & 0xFF,
 		   (state[7] >> 24) & 0xFF, (state[7] >> 16) & 0xFF, (state[7] >> 8) & 0xFF, (state[7] >> 0) & 0xFF);
 	
+	unsigned char hash[32];
+	for (int i=0; i < 4; ++i) {
+		hash[i]    = (state[0] >> (24-i*8)) & 0x000000ff;
+		hash[i+4]  = (state[1] >> (24-i*8)) & 0x000000ff;
+		hash[i+8]  = (state[2] >> (24-i*8)) & 0x000000ff;
+		hash[i+12] = (state[3] >> (24-i*8)) & 0x000000ff;
+		hash[i+16] = (state[4] >> (24-i*8)) & 0x000000ff;
+		hash[i+20] = (state[5] >> (24-i*8)) & 0x000000ff;
+		hash[i+24] = (state[6] >> (24-i*8)) & 0x000000ff;
+		hash[i+28] = (state[7] >> (24-i*8)) & 0x000000ff;
+	}
+	
 	std::stringstream ss;
 	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-		ss << std::hex << std::setw(2) << std::setfill('0') << (int) ((state[i/4] >> (24 - 8*(i%4))) & 0xFF);
+		ss << std::hex << std::setw(2) << std::setfill('0') << (int) hash[i];
 	}
 	
 	cout << ss.str() << endl;
 	printf("test : %02X\n", (state[0] >> 28) & 0xFF);
 	printf("test : %01X\n", (state[0] >> 24) & 0xFF);
+	printf("test : %c\n", (state[0] >> 24) & 0xFF);
 
 	int success = (((state[0] >> 24) & 0xFF) == 0xE3) && (((state[0] >> 16) & 0xFF) == 0xB0) &&
 	(((state[0] >> 8) & 0xFF) == 0xC4) && (((state[0] >> 0) & 0xFF) == 0x42);
@@ -158,12 +172,4 @@ int main(int argc, const char * argv[])
 
 	return (success != 0 ? 0 : 1);
 }
-
-
-
-
-
-
-
-
 
