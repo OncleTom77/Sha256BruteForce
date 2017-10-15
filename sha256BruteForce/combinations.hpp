@@ -10,9 +10,17 @@
 #define combinations_hpp
 
 #include <stdio.h>
+#include <iomanip>
 #include <queue>
 #include <iostream>
 #include <sstream>
+#include <string>
+#include <openssl/sha.h>
+
+const std::string MIN_LETTERS = "abcdefghijklmnopqrstuvwxyz";
+const std::string MAJ_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const std::string NUMBERS = "0123456789";
+const std::string CHARSET = MIN_LETTERS + MAJ_LETTERS + NUMBERS + " ";
 
 /*
  * Ne fait pas ce que l'on souhaite.
@@ -31,5 +39,15 @@ void get_all_combinations(std::string charset, std::string str, int length, std:
  * Appelle 'test_function' sur toutes les combinaisons possibles de taille 'length' pour un charset définit.
  */
 bool test_all_combinations(std::string charset, std::string str, int length, bool (*test_function) (std::string));
+
+/*
+ * Génère tous les mots possibles sur la longueur donnée, avec le charset défini plus haut.
+ */
+bool get_all_combinations_iteratif(int length, const std::string passwordHash);
+
+/**
+ * Fonction de hash d'un mot avec l'algorithme sha256.
+ */
+std::string sha256(const std::string str);
 
 #endif /* combinations_hpp */

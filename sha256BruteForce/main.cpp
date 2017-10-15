@@ -9,23 +9,13 @@
 #include <iomanip>
 #include <sstream>
 #include <queue>
-#include <openssl/sha.h>
 #include <thread>
 
 #include "combinations.hpp"
-#include "sha256.hpp"
+#include "utils.hpp"
+#include "avxImpl.hpp"
 
 using namespace std;
-
-const string MIN_LETTERS = "abcdefghijklmnopqrstuvwxyz";
-const string MAJ_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const string NUMBERS = "0123456789";
-
-string passwordHash;
-
-bool sha256_test_function(string str);
-
-bool mock_test_function(string str);
 
 // Le nombre de chaines de caractères de taille N possibles pour un ensemble C de caractères (minuscules, majuscules, chiffres, etc) est égal à C^N.
 //
@@ -48,92 +38,6 @@ bool mock_test_function(string str);
 // 		- des chaines de caractères de taille 8 : 218 340 105 584 896
 //  	- des chaines de caractères de taille 16 : 4,767240170682353e28
 
-string sha256(const string str) {
-	unsigned char hash[SHA256_DIGEST_LENGTH];
-	SHA256_CTX sha256;
-	SHA256_Init(&sha256);
-	SHA256_Update(&sha256, str.c_str(), str.size());
-	SHA256_Final(hash, &sha256);
-	stringstream ss;
-	
-	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-		ss << hex << setw(2) << setfill('0') << (int) hash[i];
-	}
-	
-	return ss.str();
-}
-
-string sha256_optim(const string str) {
-	const unsigned char *text = (const unsigned char *) str.c_str();
-	unsigned char hash[SHA256_DIGEST_LENGTH];
-	
-	sha256(text, (unsigned int) str.length(), hash);
-	
-	stringstream ss;
-	
-	//#pragma clang loop vectorize(enable)
-	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-		ss << hex << setw(2) << setfill('0') << (int) hash[i];
-	}
-	
-	return ss.str();
-}
-
-bool mock_test_function(string str) {
-	return false;
-}
-
-/*
- * Hashes the string and compares it with the input hash
- */
-bool sha256_test_function(string str) {
-	string resultedHash = sha256(str);
-	if (resultedHash == passwordHash) {
-		std::cout << "'" << str << "' is the password !" << std::endl;
-		return true;
-	}
-	return false;
-}
-
-void print_queue(queue<string> *my_queue) {
-	cout << "Size : " << to_string(my_queue->size()) << endl;
-	/*
-	while (!queue->empty()) {
-		cout << queue->front() << endl;
-		queue->pop();
-	}*/
-	*my_queue = {};
-}
-
-void print_stats(chrono::time_point<chrono::system_clock> start, chrono::time_point<chrono::system_clock> end) {
-	chrono::duration<double> elapsed_seconds = end - start;
-	time_t end_time = chrono::system_clock::to_time_t(end);
-	
-	cout << "finished computation at " << ctime(&end_time)
-			<< "elapsed time: " << elapsed_seconds.count() << "s" << endl
-			<< endl;
-}
-
-void print_stats_thread(chrono::time_point<chrono::system_clock> start, chrono::time_point<chrono::system_clock> end, unsigned short length) {
-	chrono::duration<double> elapsed_seconds = end - start;
-	cout << "Time to test all strings of " << length << " characters : " << elapsed_seconds.count() << "s" << endl;
-}
-
-bool task(unsigned short length) {
-	chrono::time_point<chrono::system_clock> start, end;
-	bool found = false;
-	
-	start = chrono::system_clock::now();
-	found = test_all_combinations(MIN_LETTERS, "", length, &sha256_test_function);
-	end = chrono::system_clock::now();
-	
-	if (!found) {
-		print_stats_thread(start, end, length);
-	}
-	
-	return found;
-}
-
 void compute_average_time_sha256() {
 	chrono::time_point<chrono::system_clock> start, end;
 	string test[] = {
@@ -143,65 +47,123 @@ void compute_average_time_sha256() {
 		"csHFqTt6Vg40NG52q7XbwBGzh2DxEwmhuuCa0aGyXMItG5DpXW5Z1KeI2Jxi8DVaqZ9hYLB8h7b",
 		"SOTsl54CqaozEXO3GfuM3WD780T2E3I0Kv76hnb2KJ2AVrbMXIzpXxvioCPLsn025GgpDoGRpxwk7g2Eas09HbYrm7632Dc3khU6"
 	};
-	double average = 0.0;
-	
-	for(string str : test) {
+	double total = 0.0;
+
+	for (int i = 0; i < 100; i++) {
 		start = chrono::system_clock::now();
-		sha256_optim(str);
+
+		// Appel de fonction à changer pour tester différents algorithmes de sha256
+		sha256(test[i%5]);
+
 		end = chrono::system_clock::now();
 		chrono::duration<double> elapsed_seconds = end - start;
-		average += elapsed_seconds.count();
+		total += elapsed_seconds.count();
 	}
-	average /= 5;
-	//cout << average * 14000000 << "s" << endl;
-	cout << "Average computation time to generate sha256 hash : " << average << "s" << endl;
+
+	cout << "Total computation time to generate 100 sha256 hash : " << total << "s" << endl;
 }
 
-int main(int argc, const char * argv[]) {
-	string charset = "abc";
-	queue<string> combi_queue = queue<string>();
-	chrono::time_point<chrono::system_clock> start, end;
-	chrono::time_point<chrono::system_clock> start_all, end_all;
-	bool found = false;
-	int nbConcurrentThreadsSupported = thread::hardware_concurrency();
-	
-	cout << "Number of concurrent threads supported : " << nbConcurrentThreadsSupported << endl;
-	
-//	thread thread1 = thread(&cout, 1);
-	
-	compute_average_time_sha256();
-	
-//	Calcul le temps que prend la fonction de hash
-	start = chrono::system_clock::now();
-	passwordHash = sha256("test");
-	end = chrono::system_clock::now();
-	
-	cout << "Hash : " << passwordHash << endl;
-	print_stats(start, end);
-	
-	start = chrono::system_clock::now();
-	passwordHash = sha256_optim("testEE");
-	end = chrono::system_clock::now();
-	
-	cout << "Hash : " << passwordHash << endl;
-	print_stats(start, end);
-	
-//	Affiche toutes les combinaisons possibles sur 1 lettre, puis 2, puis 3, etc
-	start_all = chrono::system_clock::now();
-	cout << "*************** Beginning ***************" << endl;
-	for (unsigned short i = 1; i <= 5 && !found; i++) {
-		found = task(i);
-	}
-	cout << "****************** End ******************" << endl;
-	end_all = chrono::system_clock::now();
-	print_stats(start_all, end_all);
-	
-//	get_all_combinations(charset, "", 3, &combi_queue);
-//	print_queue(&combi_queue);
+
 //
-//	cout << "-------------------------------" << endl;
-//	get_all_permutations("", charset, &combi_queue);
-//	print_queue(&combi_queue);
+//int main(int argc, const char * argv[]) {
+//	chrono::time_point<chrono::system_clock> start_all, end_all, start, end;
+//	bool found = false;
+//	int nbConcurrentThreadsSupported = thread::hardware_concurrency();
+//	string passwordHash = sha256("azert");
+//
+//	cout << "Number of concurrent threads supported : " << nbConcurrentThreadsSupported << endl;
+//	cout << "Charset : " << CHARSET << endl;
+//	cout << "Hash : " << passwordHash << endl;
+//
+////	Affiche toutes les combinaisons possibles sur 1 lettre, puis 2, puis 3, etc
+//	start_all = chrono::system_clock::now();
+//	cout << "*************** Beginning ***************" << endl;
+//	for (unsigned short i = 0; i <= 5 && !found; i++) {
+//		start = chrono::system_clock::now();
+//		found = get_all_combinations_iteratif(i, passwordHash);
+//		end = chrono::system_clock::now();
+//
+//		if(!found) {
+//			print_stats_thread(start, end, i);
+//		}
+//	}
+//	cout << "****************** End ******************" << endl;
+//	end_all = chrono::system_clock::now();
+//	print_stats(start_all, end_all);
+//
+//	return 0;
+//}
+
+
+
+
+
+
+
+#include <stdio.h>
+#include <string.h>
+int main(int argc, const char * argv[])
+{
+	std::string strMessage = "azert1234567890AZERTYUIOPMLKJHGFDSQWXCVBN1234567890 awxA";
+	uint32_t length = (uint32_t) strMessage.length();
 	
-	return 0;
+	std::cout << "0x80 : '" << (char) 0x80 << "'" << std::endl;
+	std::cout << "0x00 : '" << (char) 0x00 << "'" << std::endl;
+	
+	uint8_t message[length];
+	for (uint32_t i = 0; i < length; i++) {
+		message[i] = strMessage[i];
+		cout << message[i];
+	}
+	cout << endl;
+	
+	/* empty message with padding */
+//	uint8_t message[64];
+//	memset(message, 0x00, sizeof(message));
+//	message[0] = 0x80;
+
+	/* intial state */
+	uint32_t state[8] = {0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19};
+
+	sha256_process_x86(state, message, (uint32_t) sizeof(message));
+
+	/* E3B0C44298FC1C14... */
+	printf("SHA256 hash of empty message: ");
+	printf("%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X%02X...\n",
+		   (state[0] >> 24) & 0xFF, (state[0] >> 16) & 0xFF, (state[0] >> 8) & 0xFF, (state[0] >> 0) & 0xFF,
+		   (state[1] >> 24) & 0xFF, (state[1] >> 16) & 0xFF, (state[1] >> 8) & 0xFF, (state[1] >> 0) & 0xFF,
+		   (state[2] >> 24) & 0xFF, (state[2] >> 16) & 0xFF, (state[2] >> 8) & 0xFF, (state[2] >> 0) & 0xFF,
+		   (state[3] >> 24) & 0xFF, (state[3] >> 16) & 0xFF, (state[3] >> 8) & 0xFF, (state[3] >> 0) & 0xFF,
+		   (state[4] >> 24) & 0xFF, (state[4] >> 16) & 0xFF, (state[4] >> 8) & 0xFF, (state[4] >> 0) & 0xFF,
+		   (state[5] >> 24) & 0xFF, (state[5] >> 16) & 0xFF, (state[5] >> 8) & 0xFF, (state[5] >> 0) & 0xFF,
+		   (state[6] >> 24) & 0xFF, (state[6] >> 16) & 0xFF, (state[6] >> 8) & 0xFF, (state[6] >> 0) & 0xFF,
+		   (state[7] >> 24) & 0xFF, (state[7] >> 16) & 0xFF, (state[7] >> 8) & 0xFF, (state[7] >> 0) & 0xFF);
+	
+	std::stringstream ss;
+	for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+		ss << std::hex << std::setw(2) << std::setfill('0') << (int) ((state[i/4] >> (24 - 8*(i%4))) & 0xFF);
+	}
+	
+	cout << ss.str() << endl;
+	printf("test : %02X\n", (state[0] >> 28) & 0xFF);
+	printf("test : %01X\n", (state[0] >> 24) & 0xFF);
+
+	int success = (((state[0] >> 24) & 0xFF) == 0xE3) && (((state[0] >> 16) & 0xFF) == 0xB0) &&
+	(((state[0] >> 8) & 0xFF) == 0xC4) && (((state[0] >> 0) & 0xFF) == 0x42);
+
+	if (success)
+		printf("Success!\n");
+	else
+		printf("Failure!\n");
+
+	return (success != 0 ? 0 : 1);
 }
+
+
+
+
+
+
+
+
+
