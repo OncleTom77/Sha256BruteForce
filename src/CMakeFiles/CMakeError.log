@@ -1,0 +1,55 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_5ffd3/fast"
+/usr/bin/make -f CMakeFiles/cmTC_5ffd3.dir/build.make CMakeFiles/cmTC_5ffd3.dir/build
+make[1]: Entering directory '/home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_5ffd3.dir/CheckSymbolExists.c.o
+/usr/bin/cc     -o CMakeFiles/cmTC_5ffd3.dir/CheckSymbolExists.c.o   -c /home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_5ffd3
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5ffd3.dir/link.txt --verbose=1
+/usr/bin/cc       CMakeFiles/cmTC_5ffd3.dir/CheckSymbolExists.c.o  -o cmTC_5ffd3 -rdynamic 
+CMakeFiles/cmTC_5ffd3.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0xa): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_5ffd3.dir/build.make:97: recipe for target 'cmTC_5ffd3' failed
+make[1]: *** [cmTC_5ffd3] Error 1
+make[1]: Leaving directory '/home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_5ffd3/fast' failed
+make: *** [cmTC_5ffd3/fast] Error 2
+
+File /home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_47729/fast"
+/usr/bin/make -f CMakeFiles/cmTC_47729.dir/build.make CMakeFiles/cmTC_47729.dir/build
+make[1]: Entering directory '/home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_47729.dir/CheckFunctionExists.c.o
+/usr/bin/cc    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_47729.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.7/Modules/CheckFunctionExists.c
+Linking C executable cmTC_47729
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_47729.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_47729.dir/CheckFunctionExists.c.o  -o cmTC_47729 -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_47729.dir/build.make:97: recipe for target 'cmTC_47729' failed
+make[1]: *** [cmTC_47729] Error 1
+make[1]: Leaving directory '/home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_47729/fast' failed
+make: *** [cmTC_47729/fast] Error 2
+
+
