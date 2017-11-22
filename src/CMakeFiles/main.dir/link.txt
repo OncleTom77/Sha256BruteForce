@@ -1,1 +1,0 @@
-/usr/bin/c++    -msha -Wall -g -fdiagnostics-color=auto -fmax-errors=2 -std=c++11   CMakeFiles/main.dir/main.cpp.o CMakeFiles/main.dir/combinations.cpp.o CMakeFiles/main.dir/utils.cpp.o  -o main -rdynamic -lpthread -lcrypto -lssl 

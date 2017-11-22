@@ -1,3 +1,0 @@
-/home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/rebuild_cache.dir
-/home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/edit_cache.dir
-/home/teddy/Documents/linux-5al/ProgParrarel/sha256bruteforce/src/CMakeFiles/main.dir
