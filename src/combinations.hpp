@@ -25,10 +25,8 @@ const std::string CHARSET = MIN_LETTERS + MAJ_LETTERS + NUMBERS + " ";
 
 class WordGenerator {
 public:
-	const char* CHARSET_POINTERS = CHARSET.c_str();
-	std::string hashedPassword;
-	
 	WordGenerator(const std::string hashedPassword);
+	~WordGenerator();
 	void generateWords(const unsigned int startLength, const unsigned int endLength);
 	bool testWords();
 	static std::string sha256(const std::string str);
@@ -37,9 +35,13 @@ private:
 	std::queue<std::string> queue;
 	std::mutex mutex;
 	std::condition_variable cv;
+	std::string hashedPassword;
+	
+	const char* CHARSET_POINTERS = CHARSET.c_str();
 	uint8_t nbFinishedProducers = 0;
 	uint8_t nbProducers = 0;
 	bool passwordFound = false;
+	uint64_t nbTestedWords = 0;
 };
 
 #endif /* combinations_hpp */

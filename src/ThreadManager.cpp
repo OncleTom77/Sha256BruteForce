@@ -14,11 +14,11 @@ ThreadManager::ThreadManager(const std::string hashedPassword, const int nbThrea
 	std::cout << "*************** Beginning ***************" << std::endl;
 	start = std::chrono::system_clock::now();
 	
-	producers.emplace_front(std::thread(&WordGenerator::generateWords, this, 1, 4));
-	producers.emplace_front(std::thread(&WordGenerator::generateWords, this, 4, 6));
+	producers.emplace_front(std::thread(&WordGenerator::generateWords, &generator, (unsigned int) 1, (unsigned int) 4));
+	producers.emplace_front(std::thread(&WordGenerator::generateWords, &generator, 4, 6));
 	
-	consumers.emplace_front(std::thread(&WordGenerator::testWords, this));
-	consumers.emplace_front(std::thread(&WordGenerator::testWords, this));
+	consumers.emplace_front(std::thread(&WordGenerator::testWords, &generator));
+	consumers.emplace_front(std::thread(&WordGenerator::testWords, &generator));
 	
 //	for (unsigned short i = 0; i <= 5 && !found; i++) {
 //		start = std::chrono::system_clock::now();

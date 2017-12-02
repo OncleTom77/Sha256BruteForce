@@ -40,15 +40,15 @@ using namespace std;
 
 int main(int argc, const char * argv[]) {
 	int nbConcurrentThreadsSupported = thread::hardware_concurrency();
-	const string hashedPassword = WordGenerator::sha256("aze");
+	const string hashedPassword = WordGenerator::sha256("    ");
 	
 	cout << "Number of concurrent threads supported : " << nbConcurrentThreadsSupported << endl;
 	cout << "Charset : " << CHARSET << endl;
 	cout << "Hash : " << hashedPassword << endl;
 
-	ThreadManager threadManager = ThreadManager(hashedPassword, 1);
+	ThreadManager threadManager(hashedPassword, 1);
 	
-	threadManager.compute_average_time_sha256();
+//	threadManager.compute_average_time_sha256();
 
 	return 0;
 }

@@ -8,11 +8,19 @@
 
 #include "combinations.hpp"
 
-WordGenerator::WordGenerator(const std::string hashedPassword): queue(), mutex(), cv() {
-	this->hashedPassword = hashedPassword;
+WordGenerator::WordGenerator(const std::string hashedPassword): queue(), mutex(), cv(), hashedPassword(hashedPassword) {
+}
+
+WordGenerator::~WordGenerator() {
+	queue = {};
 }
 	
 void WordGenerator::generateWords(const unsigned int startLength, const unsigned int endLength) {
+	
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		++nbProducers;
+	}
 	
 	for (unsigned short length = startLength; length < endLength && !passwordFound; length++) {
 		char** pointers = (char**) malloc(length * sizeof(char*));
@@ -50,6 +58,12 @@ void WordGenerator::generateWords(const unsigned int startLength, const unsigned
 			}
 		} while(!stop && length > 0);
 		
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			std::cout << "Length done : " << length << std::endl;
+			std::cout << "Queue size : " << queue.size() << std::endl;
+		}
+		
 		free(pointers);
 	}
 	
@@ -64,9 +78,6 @@ void WordGenerator::generateWords(const unsigned int startLength, const unsigned
 }
 
 bool WordGenerator::testWords() {
-	
-	std::cout << "Test words. hashed password : " << hashedPassword << std::endl;
-	
 	do {
 		{
 			std::unique_lock<std::mutex> lock(mutex);
@@ -90,12 +101,18 @@ bool WordGenerator::testWords() {
 				passwordFound = true;
 			}
 			queue.pop();
+			++nbTestedWords;
+			
+			if (nbTestedWords % 1000000 == 0) {
+				std::cout << nbTestedWords << " tested words" << std::endl;
+				std::cout << "Current tested word : '" << str << "'" << std::endl;
+				std::cout << "Queue size : " << queue.size() << std::endl;
+			}
 		}
 	} while (!passwordFound);
 	
 	{
 		std::unique_lock<std::mutex> lock(mutex);
-		assert(queue.size() == 0);
 		std::cout << "Consumer finished. Found = " << passwordFound << std::endl;
 	}
 	
