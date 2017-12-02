@@ -8,28 +8,41 @@
 
 #include "ThreadManager.hpp"
 
-ThreadManager::ThreadManager(const std::string hashedPassword, const int nbThread) : utils(), generator(hashedPassword) {
-	
-	std::chrono::time_point<std::chrono::system_clock> start_all, end_all, start, end;
-	bool found = false;
+ThreadManager::ThreadManager(const std::string hashedPassword, const int nbThread) : producers(), consumers(), utils(), generator(hashedPassword) {
 	
 	//	Affiche toutes les combinaisons possibles sur 1 lettre, puis 2, puis 3, etc
 	std::cout << "*************** Beginning ***************" << std::endl;
-	start_all = std::chrono::system_clock::now();
+	start = std::chrono::system_clock::now();
 	
-	for (unsigned short i = 0; i <= 5 && !found; i++) {
-		start = std::chrono::system_clock::now();
-		found = generator.generateAndTestWords(i);
-		end = std::chrono::system_clock::now();
-		
-		if(!found) {
-			utils.print_stats_thread(start, end, i);
-		}
+	producers.emplace_front(std::thread(&WordGenerator::generateWords, this, 1, 4));
+	producers.emplace_front(std::thread(&WordGenerator::generateWords, this, 4, 6));
+	
+	consumers.emplace_front(std::thread(&WordGenerator::testWords, this));
+	consumers.emplace_front(std::thread(&WordGenerator::testWords, this));
+	
+//	for (unsigned short i = 0; i <= 5 && !found; i++) {
+//		start = std::chrono::system_clock::now();
+//		found = generator.generateAndTestWords(i);
+//		end = std::chrono::system_clock::now();
+//
+//		if(!found) {
+//			utils.print_stats_thread(start, end, i);
+//		}
+//	}
+}
+
+ThreadManager::~ThreadManager() {
+	for(uint8_t i=0; i<producers.size(); ++i) {
+		producers[i].join();
 	}
 	
-	end_all = std::chrono::system_clock::now();
+	for(uint8_t i=0; i<consumers.size(); ++i) {
+		consumers[i].join();
+	}
+	
+	end = std::chrono::system_clock::now();
 	std::cout << "****************** End ******************" << std::endl;
-	utils.print_stats(start_all, end_all);
+	utils.print_stats(start, end);
 }
 
 void ThreadManager::compute_average_time_sha256() {
