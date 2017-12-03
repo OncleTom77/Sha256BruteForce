@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <iostream>
 #include <thread>
+#include <math.h>
 
 #include "utils.hpp"
 #include "combinations.hpp"

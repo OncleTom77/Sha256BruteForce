@@ -14,7 +14,7 @@ WordGenerator::WordGenerator(const std::string hashedPassword): queue(), mutex()
 WordGenerator::~WordGenerator() {
 	queue = {};
 }
-	
+
 void WordGenerator::generateWords(const unsigned int startLength, const unsigned int endLength) {
 	
 	{
@@ -52,6 +52,71 @@ void WordGenerator::generateWords(const unsigned int startLength, const unsigned
 					break;
 				} else if(i == 0) {
 					stop = true;
+				} else {
+					pointers[i] = (char*) CHARSET_POINTERS;
+				}
+			}
+		} while(!stop && length > 0);
+		
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			std::cout << "Length done : " << length << std::endl;
+			std::cout << "Queue size : " << queue.size() << std::endl;
+		}
+		
+		free(pointers);
+	}
+	
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		++nbFinishedProducers;
+		cv.notify_all();
+		std::cout << "Producer finished. Found = " << passwordFound << std::endl;
+	}
+	
+	return;
+}
+
+void WordGenerator::generateWordsChar(const char startChar, const char endChar) {
+	
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		++nbProducers;
+	}
+	
+	for (unsigned short length = 1; length < 6; length++) {
+		char** pointers = (char**) malloc(length * sizeof(char*));
+		bool stop = false;
+		
+		for (int i = 0; i < length; i++) {
+			pointers[i] = (char*) CHARSET_POINTERS;
+		}
+		
+		// On commences à générer des mots qu'à partir de startChar
+		pointers[0] += startChar;
+		
+		do {
+			// Récupère le mot à partir du tableau d'index
+			std::string str = "";
+			for (int i = 0; i < length; i++) {
+				str += (char) *pointers[i];
+			}
+			
+			{
+				std::lock_guard<std::mutex> lock(mutex);
+				stop = passwordFound;
+				queue.push(str);
+				cv.notify_one();
+//				std::cout << str << std::endl;
+			}
+			
+			// Incrémente l'index du premier pointeur pouvant être incrémenté et remet à zéro les précédents qui ne peuvaient pas l'être
+			for (int i = length - 1; i >= 0; i--) {
+				if (i == 0 && pointers[i] - CHARSET_POINTERS == endChar) {
+					stop = true;
+				} else if (pointers[i] - CHARSET_POINTERS < CHARSET.length() - 1) {
+					pointers[i]++;
+					break;
 				} else {
 					pointers[i] = (char*) CHARSET_POINTERS;
 				}

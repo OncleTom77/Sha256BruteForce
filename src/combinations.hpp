@@ -27,7 +27,15 @@ class WordGenerator {
 public:
 	WordGenerator(const std::string hashedPassword);
 	~WordGenerator();
+	/**
+	 * Generate all words of length from startLength to endLength.
+	 */
 	void generateWords(const unsigned int startLength, const unsigned int endLength);
+	
+	/**
+	 * Generate words started from character startChar to endChar.
+	 */
+	void generateWordsChar(const char startChar, const char endChar);
 	bool testWords();
 	static std::string sha256(const std::string str);
 	
