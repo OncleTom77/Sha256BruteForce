@@ -46,7 +46,7 @@ int main(int argc, const char * argv[]) {
 	cout << "Charset : " << CHARSET << endl;
 	cout << "Hash : " << hashedPassword << endl;
 
-	ThreadManager threadManager(hashedPassword, 1);
+	ThreadManager threadManager(hashedPassword, 2);
 	
 //	threadManager.compute_average_time_sha256();
 

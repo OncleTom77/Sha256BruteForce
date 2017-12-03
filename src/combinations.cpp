@@ -84,7 +84,7 @@ void WordGenerator::generateWordsChar(const char startChar, const char endChar) 
 		++nbProducers;
 	}
 	
-	for (unsigned short length = 1; length < 6; length++) {
+	for (unsigned short length = 1; length < 6 && !passwordFound; length++) {
 		char** pointers = (char**) malloc(length * sizeof(char*));
 		bool stop = false;
 		
@@ -137,6 +137,63 @@ void WordGenerator::generateWordsChar(const char startChar, const char endChar) 
 		++nbFinishedProducers;
 		cv.notify_all();
 		std::cout << "Producer finished. Found = " << passwordFound << std::endl;
+	}
+	
+	return;
+}
+
+void WordGenerator::generateAndTestWords(const char startChar, const char endChar) {
+	
+	for (unsigned short length = 1; length < 6 && !passwordFound; length++) {
+		char** pointers = (char**) malloc(length * sizeof(char*));
+		bool stop = false;
+		
+		for (int i = 0; i < length; i++) {
+			pointers[i] = (char*) CHARSET_POINTERS;
+		}
+		
+		// On commences à générer des mots qu'à partir de startChar
+		pointers[0] += startChar;
+		
+		do {
+			// Récupère le mot à partir du tableau d'index
+			std::string str = "";
+			for (int i = 0; i < length; i++) {
+				str += (char) *pointers[i];
+			}
+			
+			std::string resultedHash = sha256(str);
+			
+			if (resultedHash == hashedPassword) {
+				std::lock_guard<std::mutex> lock(mutex);
+				std::cout << "'" << str << "' is the password !" << std::endl;
+				passwordFound = true;
+			}
+			
+			// Incrémente l'index du premier pointeur pouvant être incrémenté et remet à zéro les précédents qui ne peuvaient pas l'être
+			for (int i = length - 1; i >= 0; i--) {
+				if (i == 0 && pointers[i] - CHARSET_POINTERS == endChar) {
+					stop = true;
+				} else if (pointers[i] - CHARSET_POINTERS < CHARSET.length() - 1) {
+					pointers[i]++;
+					break;
+				} else {
+					pointers[i] = (char*) CHARSET_POINTERS;
+				}
+			}
+		} while(!stop && length > 0 && !passwordFound);
+		
+		{
+			std::lock_guard<std::mutex> lock(mutex);
+			std::cout << "Length done : " << length << ". From " << (char) *(CHARSET_POINTERS + startChar) << " to " << (char) *(CHARSET_POINTERS + endChar) << std::endl;
+		}
+		
+		free(pointers);
+	}
+	
+	{
+		std::lock_guard<std::mutex> lock(mutex);
+		std::cout << "Thread finished. Found = " << passwordFound << std::endl;
 	}
 	
 	return;

@@ -14,11 +14,26 @@ ThreadManager::ThreadManager(const std::string hashedPassword, const int nbThrea
 	std::cout << "*************** Beginning ***************" << std::endl;
 	start = std::chrono::system_clock::now();
 	
+	/*
 	producers.emplace_front(std::thread(&WordGenerator::generateWordsChar, &generator, 0, CHARSET.length()/2));
 	producers.emplace_front(std::thread(&WordGenerator::generateWordsChar, &generator, CHARSET.length()/2 + 1, CHARSET.length() - 1));
 	
 	consumers.emplace_front(std::thread(&WordGenerator::testWords, &generator));
 	consumers.emplace_front(std::thread(&WordGenerator::testWords, &generator));
+	consumers.emplace_front(std::thread(&WordGenerator::testWords, &generator));
+	 */
+	
+	int limit = CHARSET.length() / nbThread;
+	
+	if (nbThread == 1) {
+		producers.emplace_front(std::thread(&WordGenerator::generateAndTestWords, &generator, 0, CHARSET.length() - 1));
+	} else {
+		producers.emplace_front(std::thread(&WordGenerator::generateAndTestWords, &generator, 0, limit));
+		for (int i = 1; i < nbThread - 1; i++) {
+			producers.emplace_front(std::thread(&WordGenerator::generateAndTestWords, &generator, (i * limit) + 1, (i+1) * limit));
+		}
+		producers.emplace_front(std::thread(&WordGenerator::generateAndTestWords, &generator, ((nbThread - 1) * limit) + 1, CHARSET.length() - 1));
+	}
 	
 //	for (unsigned short i = 0; i <= 5 && !found; i++) {
 //		start = std::chrono::system_clock::now();
