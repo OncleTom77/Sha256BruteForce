@@ -1,11 +1,3 @@
-//
-//  utils.hpp
-//  sha256BruteForce
-//
-//  Created by Thomas Fouan on 14/10/2017.
-//  Copyright © 2017 Thomas Fouan. All rights reserved.
-//
-
 #ifndef utils_hpp
 #define utils_hpp
 
@@ -18,9 +10,10 @@
 
 class Utils {
 public:
-	void print_queue(std::queue<std::string> *my_queue);
+	/**
+	 * Affiche la date et l'heure à laquelle la fonction a été appelée et affiche le temps écoulé entre la période 'start' et 'end'.
+	 */
 	void print_stats(std::chrono::time_point<std::chrono::system_clock> start, std::chrono::time_point<std::chrono::system_clock> end);
-	void print_stats_thread(std::chrono::time_point<std::chrono::system_clock> start, std::chrono::time_point<std::chrono::system_clock> end, unsigned short length);
 };
 
 #endif /* utils_hpp */
