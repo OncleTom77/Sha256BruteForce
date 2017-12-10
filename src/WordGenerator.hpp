@@ -8,7 +8,8 @@
 #include <sstream>
 #include <string>
 #include <cassert>
-#include <openssl/sha.h>
+#include <mutex>
+#include "HeaderFiles/sha.h"
 
 const std::string MIN_LETTERS = "abcdefghijklmnopqrstuvwxyz";
 const std::string MAJ_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
